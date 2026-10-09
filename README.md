@@ -1,112 +1,129 @@
-# ShopEase — Round 2 Low-Level Design Practical
+# Online Shopping Platform
 
-## Run in VS Code
-1. Open this folder in VS Code.
-2. In Terminal, run `npm install`.
-3. Run `npm start`.
-4. Open http://localhost:3000.
-5. Keep the terminal running.
+An online shopping web application developed using HTML, CSS, JavaScript, Node.js, and Express.js. This project demonstrates Low-Level Design (LLD) concepts and REST API implementation for an e-commerce platform.
 
-## Task 1 & 2: REST API design (HTTP methods and URIs)
+Users can search for products, view product details, add items to a shopping cart, place orders, simulate payments, and track delivery status.
 
-| Operation | Method | URI |
-|---|---|---|
-| Health check | GET | `/api/health` |
-| Search products | GET | `/api/products?search=phone` |
-| Get product details | GET | `/api/products/1` |
-| Add to cart | POST | `/api/cart` |
-| View cart | GET | `/api/cart?userId=101` |
-| Place order | POST | `/api/orders` |
-| Simulate payment | POST | `/api/orders/1001/payment` |
-| Track order | GET | `/api/orders/1001/track` |
-| Advance demo delivery status | PATCH | `/api/orders/1001/track` |
+## Features
 
-Use the actual order ID returned from `POST /api/orders`; `1001` is just an example.
+* Search products by name or category
+* View product details, prices, and stock availability
+* Add products to the shopping cart
+* Calculate cart total and item subtotals
+* Place orders and generate order IDs
+* Simulate payment processing
+* Track order and delivery status
+* Update delivery status for demonstration
+* REST API integration using HTTP methods
+* Responsive user interface
 
-## Task 3: Place Order request and response
+## Technologies Used
 
-Request:
-- Method: `POST`
-- URL: `http://localhost:3000/api/orders`
-- Body → raw → JSON:
-```json
-{ "userId": 101 }
+* HTML5
+* CSS3
+* JavaScript
+* Node.js
+* Express.js
+* REST APIs
+* JSON
+* Fetch API
+
+## Project Structure
+
+```text
+online-shopping-platform/
+├── public/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+├── server.js
+├── package.json
+├── package-lock.json
+├── README.md
+└── PRACTICAL-RECORD.md
 ```
 
-The cart must contain at least one item. Example success response (amount and ID depend on the cart):
-```json
-{
-  "message": "Order created. Complete payment to confirm it.",
-  "orderId": 1001,
-  "totalAmount": 30000,
-  "status": "PENDING_PAYMENT",
-  "paymentStatus": "PENDING",
-  "paymentEndpoint": "/api/orders/1001/payment"
-}
-```
-HTTP status: `201 Created`.
+## REST API Endpoints
 
-## Task 4: HTTP status codes used
-- `200 OK`: successful GET, successful simulated payment, successful tracking update.
-- `201 Created`: item added to cart; order created.
-- `400 Bad Request`: invalid quantity, empty cart, unsupported payment method, delivery advanced before payment.
-- `404 Not Found`: product or order ID does not exist.
+| HTTP Method | Endpoint                     | Description                 |
+| ----------- | ---------------------------- | --------------------------- |
+| GET         | `/api/health`                | Check API status            |
+| GET         | `/api/products`              | Retrieve all products       |
+| GET         | `/api/products?search=phone` | Search products             |
+| GET         | `/api/products/1`            | Get product details         |
+| POST        | `/api/cart`                  | Add a product to the cart   |
+| GET         | `/api/cart?userId=101`       | View cart and total amount  |
+| POST        | `/api/orders`                | Create an order             |
+| POST        | `/api/orders/:id/payment`    | Simulate order payment      |
+| GET         | `/api/orders/:id/track`      | Track order delivery        |
+| PATCH       | `/api/orders/:id/track`      | Update demo delivery status |
 
-## Task 5: Sequence diagram
+## Application Workflow
 
-```mermaid
-sequenceDiagram
-    actor Customer
-    participant UI as Frontend
-    participant API as Express REST API
-    participant Data as In-memory Data
-    participant Pay as Demo Payment
-    participant Delivery as Delivery Tracking
-    Customer->>UI: Search product
-    UI->>API: GET /api/products?search=phone
-    API->>Data: Find matching products
-    Data-->>API: Product list
-    API-->>UI: 200 OK + JSON
-    Customer->>UI: View product
-    UI->>API: GET /api/products/1
-    API-->>UI: 200 OK + product details
-    Customer->>UI: Add to cart
-    UI->>API: POST /api/cart
-    API-->>UI: 201 Created
-    Customer->>UI: Place order
-    UI->>API: POST /api/orders
-    API-->>UI: 201 Created + order ID
-    UI->>Pay: POST /api/orders/{id}/payment
-    Pay-->>UI: 200 OK + payment status
-    UI->>Delivery: GET /api/orders/{id}/track
-    Delivery-->>UI: 200 OK + delivery status
-```
+1. The customer searches for a product.
+2. The application displays matching products.
+3. The customer views product details.
+4. The customer adds products to the shopping cart.
+5. The application calculates the total amount.
+6. The customer places an order.
+7. The backend generates an order ID.
+8. The payment API simulates payment processing.
+9. The order status is updated.
+10. The customer tracks the delivery using the order ID.
 
-## Task 6: Track Order API
+## HTTP Status Codes
 
-- Method: `GET`
-- URL: `http://localhost:3000/api/orders/1001/track`
-- Replace `1001` with the order ID generated by your own order.
-- Example response:
-```json
-{
-  "orderId": 1001,
-  "status": "CONFIRMED",
-  "paymentStatus": "PAID",
-  "deliveryStatus": "PROCESSING"
-}
-```
+* `200 OK` — Request completed successfully.
+* `201 Created` — A cart item or order was created.
+* `400 Bad Request` — Invalid request, empty cart, or insufficient stock.
+* `404 Not Found` — Requested product or order does not exist.
 
-For demo purposes, `PATCH /api/orders/{id}/track` advances the delivery through `PACKED`, `IN_TRANSIT`, and `DELIVERED`.
+## Testing
 
-## Recommended Postman demonstration
-1. `GET http://localhost:3000/api/products?search=phone`
-2. `GET http://localhost:3000/api/products/1`
-3. `POST http://localhost:3000/api/cart` with body `{ "userId": 101, "productId": 1, "quantity": 2 }`
-4. `POST http://localhost:3000/api/orders` with body `{ "userId": 101 }`
-5. Use the returned order ID in `POST http://localhost:3000/api/orders/1001/payment` with body `{ "method": "UPI" }`
-6. `GET http://localhost:3000/api/orders/1001/track`
-7. Repeat `PATCH http://localhost:3000/api/orders/1001/track` to demonstrate delivery progress.
+The application can be tested using a web browser and Postman.
 
-## Important scope note
-This is a student demo. The payment endpoint simulates success and does not charge money or connect to a payment gateway. Data is held in memory and resets when the server restarts. It is not production-ready.
+Example API requests:
+
+* Search products: `GET /api/products?search=phone`
+* View product: `GET /api/products/1`
+* Add to cart: `POST /api/cart`
+* Place order: `POST /api/orders`
+* Simulate payment: `POST /api/orders/:id/payment`
+* Track delivery: `GET /api/orders/:id/track`
+
+## Limitations
+
+* Product, cart, order, and payment records are stored in server memory.
+* Data resets when the server restarts.
+* Payment processing is simulated; no real payment gateway is connected.
+* Delivery tracking is simulated for demonstration purposes.
+* User authentication and production-level security are not implemented.
+
+## Future Enhancements
+
+* User registration and authentication
+* MySQL or MongoDB database integration
+* Real payment gateway integration
+* Product reviews and ratings
+* Admin dashboard
+* Email and order notifications
+* Deployment to a cloud platform
+
+## Learning Outcomes
+
+* Understanding REST API design
+* Implementing HTTP methods and status codes
+* Connecting frontend and backend
+* Handling JSON requests and responses
+* Implementing cart and order management
+* Understanding basic e-commerce workflows
+* Applying Low-Level Design concepts
+
+## Author
+
+Kamalika P
+
+## License
+
+This project was developed for educational and learning purposes.
+
